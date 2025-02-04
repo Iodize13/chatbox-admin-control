@@ -11,6 +11,10 @@ if (isset($_SESSION['unique_id'])) {
     $user_data = mysqli_fetch_assoc($role_query);
     $role = $user_data['role'];
 
+    $update_query = "UPDATE messages SET read_status = 1 WHERE incoming_msg_id = {$outgoing_id} AND outgoing_msg_id = {$incoming_id} AND read_status = 0";
+    mysqli_query($conn, $update_query);
+
+    // SQL query for fetching messages based on the user's role
     if ($role === 'admin') {
         // Admins can see all messages between themselves and any user
         $sql = "SELECT * FROM messages 
@@ -31,10 +35,15 @@ if (isset($_SESSION['unique_id'])) {
     $query = mysqli_query($conn, $sql);
     if (mysqli_num_rows($query) > 0) {
         while ($row = mysqli_fetch_assoc($query)) {
+            // Check if message is read or unread
+            $read_status = ($row['read_status'] == 1) ? '✅ อ่านแล้ว' : '🕒 ส่ง';
+            $timestamp = date("h:i A", strtotime($row['timestamp'])); // Convert timestamp to desired format
+
             if ($row['outgoing_msg_id'] === $outgoing_id) {
                 $output .= '<div class="chat outgoing">
                             <div class="details">
                                 <p>' . $row['msg'] . '</p>
+                                <small>' . $read_status . ' | ' . $timestamp . '</small>  <!-- Display read status and timestamp -->
                             </div>
                             </div>';
             } else {
@@ -42,6 +51,7 @@ if (isset($_SESSION['unique_id'])) {
                             <img src="php/images/' . $row['img'] . '" alt="">
                             <div class="details">
                                 <p>' . $row['msg'] . '</p>
+                                <small>' . $read_status . ' | ' . $timestamp . '</small>  <!-- Display read status and timestamp -->
                             </div>
                             </div>';
             }
